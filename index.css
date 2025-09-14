@@ -1,0 +1,246 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.product-menu-container {
+    font-family: Arial, sans-serif;
+    height: 800px;
+    max-width: 1600px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    overflow: hidden;
+}
+
+.main-container {
+    display: flex;
+    height: 100%;
+}
+
+.left-pane {
+    flex: 1;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.content-area {
+    flex: 4;
+    display: flex;
+    height: 100%;
+}
+
+.middle-pane {
+    flex: 1;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.right-pane {
+    flex: 3;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.items-pane {
+    flex: 4;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.product-card {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 10px;
+    position: relative;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.info-label {
+    font-size: 12px;
+    padding: 2px 4px;
+    border: 1px solid #999;
+}
+
+.counter {
+    font-size: 12px;
+    padding: 2px 4px;
+    border: 1px solid #999;
+}
+
+.add-btn,
+.add-to-cart-btn,
+.add-submenu-btn,
+.back-btn,
+.add_table_btn_add {
+    padding: 5px 10px;
+    cursor: pointer;
+    border: 1px solid #999;
+    background: white;
+}
+
+
+.del-btn {
+    padding: 0px 10px;
+    cursor: pointer;
+    border: 1px solid #999;
+    background: white;
+}
+
+.add-btn:hover,
+.add-to-cart-btn:hover,
+.add-submenu-btn:hover,
+.back-btn:hover {
+    background: #f0f0f0;
+}
+
+.item-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.middle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: grab;
+}
+
+
+.middle-item:hover {
+    background: #f9f9f9;
+}
+
+.middle-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.folders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.folder {
+    border: 2px dashed #ccc;
+    padding: 10px;
+    min-height: 120px;
+    text-align: center;
+}
+
+.folder.drag-over {
+    border-color: #999;
+    background: #f5f5f5;
+}
+
+
+.folder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+.folder-item-name {
+    font-size: 12px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.pane-title {
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ccc;
+    font-size: 1.4em;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+    .product-menu-container {
+        height: 100vh;
+        max-height: 800px;
+    }
+
+    .folders-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .product-menu-container {
+        height: 100vh;
+        max-height: 800px;
+    }
+
+    .main-container {
+        flex-direction: column;
+    }
+
+    .left-pane {
+        flex: none;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .content-area {
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .middle-pane {
+        flex: none;
+        height: 150px;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .right-pane {
+        flex: 1;
+    }
+
+    .items-pane {
+        flex: 1;
+    }
+
+    .folders-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .folders-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .product-menu-container {
+        height: 100vh;
+        max-height: none;
+    }
+}

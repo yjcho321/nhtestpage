@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Menu Manager</title>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="table.css">
+</head>
+
+<body>
+    <div id="page-header" style="text-align:center; margin-bottom:20px;">
+        <img src="header.png" alt="Page Header" style="max-width:100%; height:auto;" />
+    </div>
+    <div class="product-menu-container">
+        <div class="main-container">
+            <!-- Left Pane - Product Cards (Always visible) -->
+            <div class="left-pane" id="leftPane">
+                <div class="pane-title">메뉴추가</div>
+                <div id="productCards"></div>
+            </div>
+
+            <!-- Content Area - Middle and Right Panes or Items Pane -->
+            <div class="content-area" id="contentArea">
+                <!-- Middle Pane - Cart Items -->
+                <div class="middle-pane" id="middlePane">
+                    <div class="pane-title">추가된 메뉴</div>
+                    <div id="cartItems"></div>
+                </div>
+
+                <!-- Right Pane - Menu Folders -->
+                <div class="right-pane" id="rightPane">
+                    <div class="pane-title">메뉴구조</div>
+                    <div class="folders-grid" id="foldersGrid"></div>
+                    <button class="add-submenu-btn" onclick="addNewSubmenu()">대메뉴 추가</button>
+                </div>
+
+                <!-- Items Detail Pane (Hidden by default) -->
+                <div class="items-pane hidden" id="itemsPane">
+                    <button class="back-btn" onclick="showMainPanes()">Back</button>
+                    <div class="pane-title">추가메뉴 선택</div>
+                    <div id="itemsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-footer" style="text-align:center; margin-top:20px;">
+        <img src="footer.png" alt="Page Footer" style="max-width:100%; height:auto;" />
+    </div>
+
+    <script>
+        const productGroups = {
+            groups:
+                [{
+                    name: "완성형 컨텐츠", description: "미리 제작된 페이지를 추가하여 홈페이지를 더욱 풍성하게 꾸며보세요",
+                    addedCount: 0,
+                    addedPrices: { onetime: 0, monthly: 0 },
+                    products: [
+                        {
+                            name: "사업소개", description: "농협의 사업을 소개해보세요",
+                            items: [
+                                { id: 11, unique: true, rename: false, name: "금융사업", description: "금융사업 소개내용", prices: { onetime: 100000, monthly: 10000 } },
+                                { id: 12, unique: true, rename: false, name: "경제사업", description: "경제사업 소개내용", prices: { onetime: 100000, monthly: 10000 } },
+                                { id: 13, unique: true, rename: false, name: "교육지원사업", description: "교육지원사업 소개내용", prices: { onetime: 50000, monthly: 5000 } }]
+                        },
+                        {
+                            name: "금리안내", description: "농협의 다양한 예적금의 금리를 한눈에 비교해보세요", items: [
+                                { id: 21, unique: true, rename: false, name: "금리안내", description: "금리안내 소개내용", prices: { onetime: 100000, monthly: 15000 } }]
+                        },
+                        {
+                            name: "조합원안내", description: "농협의 조합원 가입 및 해지방법을 소개해보세요", items: [
+                                { id: 21, unique: true, rename: false, name: "조합원안내", description: "조합원안내 소개내용", prices: { onetime: 50000, monthly: 3000 } }]
+                        }]
+                },
+                {
+                    name: "맞춤형 컨텐츠", description: "원하는 내용으로 웹페이지를 제작 요청해보세요",
+                    addedCount: 0,
+                    addedPrices: { onetime: 0, monthly: 0 },
+                    products: [
+                        {
+                            name: "사업소개", description: "우리 농협의 특별한 사업을 소개해보세요", items: [
+                                { id: 31, unique: false, rename: true, name: "(맞춤형)사업소개", description: "(맞춤형)사업소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
+                        },
+                        {
+                            name: "지역명소소개", description: "우리 농협의 특별한 명소를 소개해보세요", items: [
+                                { id: 32, unique: false, rename: true, name: "(맞춤형)지역명소소개", description: "(맞춤형)지역명소소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
+                        },
+                        {
+                            name: "특산물소개", description: "우리 농협의 특별한 특산물을 소개해보세요", items: [
+                                { id: 33, unique: false, rename: true, name: "(맞춤형)특산물소개", description: "(맞춤형)특산물소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
+                        },
+                        {
+                            name: "기타 원하는 내용", description: "무엇이든지 상관없습니다. 원하는 웹페이지를 추가하세요", items: [
+                                { id: 33, unique: false, rename: true, name: "(맞춤형)기타", description: "(맞춤형)기타 소개내용", prices: { onetime: 400000, monthly: 25000 } }]
+                        }]
+                },
+                {
+                    name: "기능 추가", description: "미리 제작된 기능들을 활용한 페이지를 추가하여보세요",
+                    addedCount: 0,
+                    addedPrices: { onetime: 0, monthly: 0 },
+                    products: [
+                        {
+                            name: "게시판", description: "일반게시물, 사진, 동영상 등 다양한 양식의 게시판을 추가해보세요",
+                            items: [
+                                { id: 41, unique: true, rename: true, name: "일반게시판", description: "일반게시판 소개내용", prices: { onetime: 40000, monthly: 3000 } },
+                                { id: 42, unique: true, rename: true, name: "사진게시판", description: "사진게시판 소개내용", prices: { onetime: 40000, monthly: 4000 } },
+                                { id: 43, unique: true, rename: true, name: "동영상게시판", description: "동영상게시판 소개내용", prices: { onetime: 40000, monthly: 4000 } }]
+                        },
+                        {
+                            name: "인물소개", description: "역대 조합장 소개 등의 페이지에 활용해보세요", items: [
+                                { id: 51, unique: true, name: "인물소개", description: "인물소개 소개내용", prices: { onetime: 60000, monthly: 5000 } }]
+                        }]
+                },
+                ]
+        }
+
+        const defaultMenus = {
+            submenus: [
+                {
+                    name: "농협소개", items: [
+                        { id: 0, name: "인사말" },
+                        { id: 0, name: "연혁" },
+                        { id: 0, name: "조직도" },
+                        { id: 0, name: "사무소안내" },
+                    ]
+                },
+                {
+                    name: "공시", items: [
+                        { id: 0, name: "운영의공개" },
+                        { id: 0, name: "경영공시" },
+                        { id: 0, name: "정관" },
+                    ]
+                },
+                {
+                    name: "금융상품", items: [
+                        { id: 0, name: "예금상품" },
+                        { id: 0, name: "대출상품" },
+                        { id: 0, name: "보험상품" },
+                        { id: 0, name: "카드상품" },
+                        { id: 0, name: "펀드상품" },
+                    ]
+                },
+                {
+                    name: "열린마당", items: [
+                        { id: 0, name: "공지사항" },
+                        { id: 0, name: "농업뉴스" },
+                        { id: 0, name: "농협갤러리" },
+                        { id: 0, name: "농협동영상" },
+                    ]
+                },
+            ]
+        }
+
+        // Global variables
+        let productsData = productGroups;
+        let menuStructure = defaultMenus;
+        let cartItems = [];
+        let currentGroupIndex = -1;
+
+        // Initialize the application
+        function initializeApp() {
+            renderProductCards();
+            renderMenuFolders();
+            renderCartItems();
+        }
+
+        // Render product cards in left pane
+        function renderProductCards() {
+            const container = document.getElementById('productCards');
+            container.innerHTML = '';
+
+            productsData.groups.forEach((group, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <h3>${group.name}</h3>
+                    <p>${group.description}</p>
+                    <div class="card-footer">
+                        <button class="add-btn" onclick="showProductItems(${index})">Add</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Show product items in detail pane (left pane stays visible)
+        function showProductItems(groupIndex) {
+            currentGroupIndex = groupIndex;
+            const group = productsData.groups[groupIndex];
+
+            // Hide middle and right panes, show items pane
+            document.getElementById('middlePane').classList.add('hidden');
+            document.getElementById('rightPane').classList.add('hidden');
+            document.getElementById('itemsPane').classList.remove('hidden');
+
+            // Render items
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = `<h2>${group.name}</h2>`;
+
+            const container = document.createElement('div');
+
+            group.products.forEach(product => {
+                const div = document.createElement('div');
+                div.classList.add('add_table_container');
+
+                const table = document.createElement('table');
+                table.classList.add('add_table_table');
+
+                // Create thead with product name and description
+                const thead = document.createElement('thead');
+                const headRow = document.createElement('tr');
+
+                const thName = document.createElement('th');
+                thName.textContent = product.name;
+                thName.classList.add('add_table_name');
+
+                const thDesc = document.createElement('th');
+                thDesc.textContent = product.description;
+                thDesc.classList.add('add_table_desc');
+                thDesc.setAttribute('colspan', '4');
+
+                headRow.appendChild(thName);
+                headRow.appendChild(thDesc);
+                thead.appendChild(headRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                product.items.forEach(item => {
+                    const row = document.createElement('tr');
+
+                    const tdName = document.createElement('td');
+                    tdName.classList.add('add_table_name');
+                    tdName.textContent = item.name;
+
+                    const tdDesc = document.createElement('td');
+                    tdDesc.classList.add('add_table_desc');
+                    tdDesc.textContent = item.description;
+
+                    const tdLabel = document.createElement('td');
+                    const spanLabel = document.createElement('span');
+                    spanLabel.classList.add('add_table_label');
+                    spanLabel.textContent = "월 비용";
+                    tdLabel.appendChild(spanLabel);
+
+                    const tdPrice = document.createElement('td');
+                    tdPrice.classList.add('add_table_price');
+                    tdPrice.textContent = item.prices.monthly.toLocaleString() + "원";
+
+                    const tdButton = document.createElement('td');
+                    tdButton.classList.add('add_table_button_cell');
+                    const btnAdd = document.createElement('button');
+                    btnAdd.classList.add('add_table_btn_add');
+                    btnAdd.textContent = "추가하기";
+                    btnAdd.onclick = () => addToCart(item.id);
+                    tdButton.appendChild(btnAdd);
+
+                    row.appendChild(tdName);
+                    row.appendChild(tdDesc);
+                    row.appendChild(tdLabel);
+                    row.appendChild(tdPrice);
+                    row.appendChild(tdButton);
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                div.appendChild(table);
+                container.appendChild(div);
+                itemsList.appendChild(container);
+            });
+
+        }
+
+        // Add item to cart
+        function addToCart(itemId) {
+            const group = productsData.groups[currentGroupIndex];
+            const product = group.products.find(product => product.items.find(item => item.id === itemId));
+            const item = product.items.find(item => item.id === itemId);
+
+            if (item) {
+                cartItems.push(item);
+                showMainPanes();
+                renderCartItems();
+            }
+        }
+
+        // Show main panes (hide items pane, show middle and right)
+        function showMainPanes() {
+            document.getElementById('middlePane').classList.remove('hidden');
+            document.getElementById('rightPane').classList.remove('hidden');
+            document.getElementById('itemsPane').classList.add('hidden');
+        }
+
+        // Render cart items in middle pane
+        function renderCartItems() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+
+            cartItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'middle-item';
+                itemDiv.draggable = true;
+                itemDiv.dataset.itemId = index;
+                itemDiv.innerHTML = `
+                    <h4>${item.name}</h4>
+                    <button class="back-btn" onclick="removeCartItem(${index})">삭제</button>
+                `;
+
+                // Add drag event listeners
+                itemDiv.addEventListener('dragstart', handleDragStart);
+                itemDiv.addEventListener('dragend', handleDragEnd);
+
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function removeCartItem(index) {
+            if (index >= 0 && index < cartItems.length) {
+                cartItems.splice(index, 1);
+                renderCartItems();
+            }
+        }
+
+
+        // Render menu folders in right pane
+        function renderMenuFolders() {
+            const container = document.getElementById('foldersGrid');
+            container.innerHTML = '';
+
+            menuStructure.submenus.forEach((submenu, index) => {
+                const folder = document.createElement('div');
+                folder.className = 'folder';
+                folder.dataset.submenuIndex = index;
+
+                let itemsHtml = '';
+                if (submenu.items && submenu.items.length > 0) {
+                    itemsHtml = submenu.items.map((item, i) => `
+                        <div class="folder-item">${item.name} <button class="del-btn" onclick="removeFolderItem(${index}, ${i})">제거</button></div>
+                        
+                    `).join('');
+                }
+
+                folder.innerHTML = `
+                    <h3>${submenu.name}</h3>
+                    ${itemsHtml}
+                `;
+
+                // Add drop event listeners
+                folder.addEventListener('dragover', handleDragOver);
+                folder.addEventListener('drop', handleDrop);
+                folder.addEventListener('dragenter', handleDragEnter);
+                folder.addEventListener('dragleave', handleDragLeave);
+
+                container.appendChild(folder);
+            });
+        }
+
+        function removeFolderItem(submenuIndex, index) {
+            let item = menuStructure.submenus[submenuIndex].items.splice(index, 1)[0];
+            console.log(item);
+            cartItems.push(item);
+            renderCartItems();
+            renderMenuFolders();
+        }
+
+
+        // Drag and drop event handlers
+        function handleDragStart(e) {
+            console.log(e.target.dataset.itemId);
+            e.dataTransfer.setData('text/plain', e.target.dataset.itemId);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.target.closest('.folder').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (!e.target.closest('.folder').contains(e.relatedTarget)) {
+                e.target.closest('.folder').classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const folder = e.target.closest('.folder');
+            folder.classList.remove('drag-over');
+
+            const itemIndex = e.dataTransfer.getData('text/plain');
+            const submenuIndex = parseInt(folder.dataset.submenuIndex);
+
+            const item = cartItems[itemIndex]
+            if (item) {
+                if (!menuStructure.submenus[submenuIndex].items) {
+                    menuStructure.submenus[submenuIndex].items = [];
+                }
+                menuStructure.submenus[submenuIndex].items.push(item);
+                removeCartItem(itemIndex);
+                renderMenuFolders();
+            }
+        }
+
+        // Add new submenu
+        function addNewSubmenu() {
+            const name = prompt('Enter submenu name:');
+            if (name && name.trim()) {
+                menuStructure.submenus.push({
+                    name: name.trim(),
+                    items: []
+                });
+                renderMenuFolders();
+            }
+        }
+
+        // Load custom data function for testing
+        function loadCustomData(productsJson, menuJson) {
+            try {
+                if (productsJson) {
+                    productsData = typeof productsJson === 'string' ? JSON.parse(productsJson) : productsJson;
+                }
+
+                if (menuJson) {
+                    menuStructure = typeof menuJson === 'string' ? JSON.parse(menuJson) : menuJson;
+                }
+
+                // Reset cart and re-initialize
+                cartItems = [];
+                initializeApp();
+            } catch (e) {
+                console.error('Invalid JSON format:', e.message);
+            }
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Expose loadCustomData function globally for external use
+        window.ProductMenuManager = {
+            loadCustomData: loadCustomData,
+            getCartItems: () => cartItems,
+            getMenuStructure: () => menuStructure
+        };
+    </script>
+
+</body>
+
+</html>

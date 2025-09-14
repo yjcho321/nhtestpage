@@ -1,0 +1,105 @@
+
+
+.add_table_table td {
+    border: none;
+    /* removed internal cell borders */
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+    font-size: .9em;
+}
+
+.add_table_table th {
+    border: none;
+    /* removed internal cell borders */
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+
+.add_table_container {
+    border: 1px solid #222;
+    /* keeps outer border */
+    border-radius: 6px;
+    padding: 10px;
+    width: 98%;
+    max-width: 1200px;
+    margin-top: 10px;
+    font-family: 'Segoe UI', 'Malgun Gothic', Arial, sans-serif;
+    background: #fff;
+    /* optionally add spacing between rows for visual clarity */
+}
+
+.add_table_table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #ddd;
+    /* optional subtle row separator */
+}
+
+.add_table_table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+
+.add_table_name {
+    font-size: 1.2em;
+    width: 120px;
+}
+
+.add_table_desc {
+    min-width: 300px;
+    color: #222;
+}
+
+.add_table_label {
+    display: inline-block;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: #fafbfc;
+    color: #222;
+    font-size: 1em;
+    padding: 4px 10px;
+    margin: 0 2px;
+    font-weight: 500;
+    min-width: 68px;
+    text-align: center;
+}
+
+.add_table_price {
+    font-size: 1em;
+    color: #222;
+}
+
+.add_table_price,
+.add_table_button_cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.add_table_button_cell {
+    width: 90px;
+    /* fix width for button cell for consistent alignment */
+}
+
+
+
+@media (max-width: 600px) {
+    .add_table_container {
+        padding: 2px;
+    }
+
+    .add_table_table th,
+    .add_table_table td {
+        font-size: 0.95em;
+        padding: 4px 6px;
+    }
+
+    .add_table_desc {
+        min-width: 140px;
+        word-break: break-all;
+    }
+}
