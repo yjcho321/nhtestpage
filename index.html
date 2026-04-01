@@ -1,457 +1,370 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Menu Manager</title>
-    <link rel="stylesheet" type="text/css" href="index.css">
-    <link rel="stylesheet" type="text/css" href="table.css">
+    <title>Advanced Sitemap Management</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.16/jstree.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 30px; background-color: #f8f9fa; margin: 0; }
+        .sitemap-container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 900px; margin: auto; }
+        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        
+        .jstree-default .jstree-anchor { height: auto !important; line-height: 28px; padding: 2px 4px; position: relative; }
+        .node-wrapper { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; padding: 2px 4px; border-radius: 4px; transition: all 0.2s; border: 2px solid transparent; }
+        .status-badge { border-radius: 20px; padding: 0 8px; font-size: 11px; font-weight: 600; line-height: 20px; transition: all 0.2s; }
+        .status-transfer { color: #d97706; background: #fef3c7; border: 1px solid #f59e0b; }
+        .status-new { color: #0284c7; background: #e0f2fe; border: 1px solid #38bdf8; }
+        .menu-name { font-size: 14px; font-weight: 600; color: #334155; transition: all 0.2s; }
+        .menu-func-type { font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+        
+        .text-warning { color: #eab308; } .text-primary { color: #3b82f6; } .text-info { color: #0ea5e9; } .text-danger { color: #ef4444; }
+
+        /* ============================================================
+           Floating Toast Banner & Continuous Blinking CSS
+           ============================================================ */
+        .depth-error-banner {
+            display: none; /* Controlled by JS */
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            background-color: #fef2f2;
+            border: 1px solid #f87171;
+            color: #b91c1c;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.25);
+            width: max-content;
+            max-width: 90vw;
+            pointer-events: none; /* Prevents banner from blocking clicks */
+        }
+        
+        @keyframes continuous-red-blink {
+            0% { background-color: #fee2e2; border-color: #ef4444; box-shadow: 0 0 0px rgba(239, 68, 68, 0.6); }
+            50% { background-color: #fca5a5; border-color: #b91c1c; box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); }
+            100% { background-color: #fee2e2; border-color: #ef4444; box-shadow: 0 0 0px rgba(239, 68, 68, 0.6); }
+        }
+
+        /* 
+           Bulletproof Structural CSS for Depth 4+ 
+        */
+        .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .node-wrapper,
+        .depth-error-node > .jstree-anchor .node-wrapper {
+            animation: continuous-red-blink 1.2s infinite !important;
+        }
+
+        .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .menu-name,
+        .depth-error-node > .jstree-anchor .menu-name {
+            color: #7f1d1d !important;
+        }
+
+        .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .status-badge,
+        .depth-error-node > .jstree-anchor .status-badge {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #b91c1c !important;
+        }
+
+        /* ============================================================
+           Custom Drag & Drop UI
+           ============================================================ */
+        #jstree-marker { border: none !important; background: transparent !important; width: 0 !important; height: 0 !important; }
+        #jstree-marker::after { content: ''; position: absolute; top: 0px; left: 0; width: 250px; height: 3px; background-color: #3b82f6; border-radius: 2px; box-shadow: 0 0 6px rgba(59, 130, 246, 0.6); pointer-events: none; z-index: 1005; }
+        #jstree-marker::before { content: ''; position: absolute; top: -3px; left: -4px; width: 9px; height: 9px; background-color: #3b82f6; border-radius: 50%; pointer-events: none; z-index: 1006; }
+        
+        body.hide-marker #jstree-marker { display: none !important; }
+        body.hide-drag-text #vakata-dnd { display: none !important; }
+        
+        .drop-inside-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.95); border: 2px dashed #10b981; border-radius: 4px;
+            display: flex; align-items: center; padding-left: 28px; z-index: 10; pointer-events: none;
+        }
+        .drop-inside-overlay::after { content: '\f061  하위 메뉴로 이동'; font-family: 'Font Awesome 6 Free', 'Malgun Gothic', sans-serif; font-weight: 900; color: #10b981; font-size: 13px; }
+
+        #vakata-dnd { background-color: rgba(255, 255, 255, 0.95) !important; border: 1px solid #cbd5e1 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; border-radius: 4px !important; padding: 6px 10px !important; font-size: 13px !important; font-family: 'Malgun Gothic', sans-serif !important; color: #334155 !important; }
+
+        .edit-container { display: inline-flex; gap: 4px; }
+        .edit-input { border: 1px solid #38bdf8; border-radius: 4px; padding: 2px 6px; font-size: 14px; font-weight: 600; color: #334155; outline: none; width: 130px; }
+        .edit-save-btn { background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; }
+
+        @keyframes blink { 0%, 40%, 80% { background: #fef08a; } 20%, 60%, 100% { background: transparent; } }
+        .blink-highlight { animation: blink 2s ease-in-out; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 999; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #1e293b; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .type-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: #f8fafc; transition: 0.2s; }
+        .type-card:hover { border-color: #3b82f6; background: #eff6ff; transform: translateY(-2px); }
+        .type-card i { font-size: 18px; color: #3b82f6; width: 24px; text-align: center; }
+        .type-info { display: flex; flex-direction: column; }
+        .type-title { font-size: 13px; font-weight: 700; color: #334155; }
+        .type-desc { font-size: 11px; color: #64748b; }
+    </style>
 </head>
-
 <body>
-    <div id="page-header" style="text-align:center; margin-bottom:20px;">
-        <img src="header.png" alt="Page Header" style="max-width:100%; height:auto;" />
-    </div>
-    <div class="product-menu-container">
-        <div class="main-container">
-            <!-- Left Pane - Product Cards (Always visible) -->
-            <div class="left-pane" id="leftPane">
-                <div class="pane-title">메뉴추가</div>
-                <div id="productCards"></div>
-            </div>
 
-            <!-- Content Area - Middle and Right Panes or Items Pane -->
-            <div class="content-area" id="contentArea">
-                <!-- Middle Pane - Cart Items -->
-                <div class="middle-pane" id="middlePane">
-                    <div class="pane-title">추가된 메뉴</div>
-                    <div id="cartItems"></div>
-                </div>
+<!-- Floating Toast Banner -->
+<div id="depth_error_banner" class="depth-error-banner">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>모바일 환경 지원을 위하여 4뎁스 이상의 메뉴는 지원하지 않습니다. 빨간 메뉴를 3뎁스 이하로 이동하여주세요.</span>
+</div>
 
-                <!-- Right Pane - Menu Folders -->
-                <div class="right-pane" id="rightPane">
-                    <div class="pane-title">메뉴구조</div>
-                    <div class="folders-grid" id="foldersGrid"></div>
-                    <button class="add-submenu-btn" onclick="addNewSubmenu()">대메뉴 추가</button>
-                </div>
+<div class="sitemap-container">
+    <h2>차세대 종합포털 사이트맵</h2>
+    <div id="sitemap_tree"></div>
+</div>
 
-                <!-- Items Detail Pane (Hidden by default) -->
-                <div class="items-pane hidden" id="itemsPane">
-                    <button class="back-btn" onclick="showMainPanes()">Back</button>
-                    <div class="pane-title">추가메뉴 선택</div>
-                    <div id="itemsList"></div>
-                </div>
-            </div>
+<div id="menuTypeModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>신규 메뉴 유형 선택</h3>
+            <button class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="card-grid">
+            <div class="type-card" data-func="게시판(글)" data-type="menu"><i class="fa-solid fa-list"></i><div class="type-info"><span class="type-title">게시판(글)</span><span class="type-desc">일반 목록형 게시판</span></div></div>
+            <div class="type-card" data-func="게시판(갤러리)" data-type="menu"><i class="fa-solid fa-image"></i><div class="type-info"><span class="type-title">게시판(갤러리)</span><span class="type-desc">이미지 위주 게시판</span></div></div>
+            <div class="type-card" data-func="공통컨텐츠" data-type="menu"><i class="fa-solid fa-file-lines"></i><div class="type-info"><span class="type-title">공통컨텐츠</span><span class="type-desc">정적 HTML 컨텐츠</span></div></div>
+            <div class="type-card" data-func="프로그램" data-type="menu"><i class="fa-solid fa-code"></i><div class="type-info"><span class="type-title">프로그램</span><span class="type-desc">사용자 정의 화면</span></div></div>
+            <div class="type-card" data-func="API연동" data-type="menu"><i class="fa-solid fa-plug"></i><div class="type-info"><span class="type-title">API연동</span><span class="type-desc">타 시스템 데이터 연동</span></div></div>
+            <div class="type-card" data-func="외부링크" data-type="link"><i class="fa-solid fa-arrow-up-right-from-square"></i><div class="type-info"><span class="type-title">외부링크</span><span class="type-desc">새 창으로 열리는 URL</span></div></div>
         </div>
     </div>
+</div>
 
-    <div id="page-footer" style="text-align:center; margin-top:20px;">
-        <img src="footer.png" alt="Page Footer" style="max-width:100%; height:auto;" />
-    </div>
+<script>
+$(document).ready(function() {
+    let treeRef = null, targetParent = null;
 
-    <script>
-        const productGroups = {
-            groups:
-                [{
-                    name: "완성형 컨텐츠", description: "미리 제작된 페이지를 추가하여 홈페이지를 더욱 풍성하게 꾸며보세요",
-                    addedCount: 0,
-                    addedPrices: { onetime: 0, monthly: 0 },
-                    products: [
-                        {
-                            name: "사업소개", description: "농협의 사업을 소개해보세요",
-                            items: [
-                                { id: 11, unique: true, rename: false, name: "금융사업", description: "금융사업 소개내용", prices: { onetime: 100000, monthly: 10000 } },
-                                { id: 12, unique: true, rename: false, name: "경제사업", description: "경제사업 소개내용", prices: { onetime: 100000, monthly: 10000 } },
-                                { id: 13, unique: true, rename: false, name: "교육지원사업", description: "교육지원사업 소개내용", prices: { onetime: 50000, monthly: 5000 } }]
-                        },
-                        {
-                            name: "금리안내", description: "농협의 다양한 예적금의 금리를 한눈에 비교해보세요", items: [
-                                { id: 21, unique: true, rename: false, name: "금리안내", description: "금리안내 소개내용", prices: { onetime: 100000, monthly: 15000 } }]
-                        },
-                        {
-                            name: "조합원안내", description: "농협의 조합원 가입 및 해지방법을 소개해보세요", items: [
-                                { id: 21, unique: true, rename: false, name: "조합원안내", description: "조합원안내 소개내용", prices: { onetime: 50000, monthly: 3000 } }]
-                        }]
-                },
-                {
-                    name: "맞춤형 컨텐츠", description: "원하는 내용으로 웹페이지를 제작 요청해보세요",
-                    addedCount: 0,
-                    addedPrices: { onetime: 0, monthly: 0 },
-                    products: [
-                        {
-                            name: "사업소개", description: "우리 농협의 특별한 사업을 소개해보세요", items: [
-                                { id: 31, unique: false, rename: true, name: "(맞춤형)사업소개", description: "(맞춤형)사업소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
-                        },
-                        {
-                            name: "지역명소소개", description: "우리 농협의 특별한 명소를 소개해보세요", items: [
-                                { id: 32, unique: false, rename: true, name: "(맞춤형)지역명소소개", description: "(맞춤형)지역명소소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
-                        },
-                        {
-                            name: "특산물소개", description: "우리 농협의 특별한 특산물을 소개해보세요", items: [
-                                { id: 33, unique: false, rename: true, name: "(맞춤형)특산물소개", description: "(맞춤형)특산물소개 소개내용", prices: { onetime: 300000, monthly: 20000 } }]
-                        },
-                        {
-                            name: "기타 원하는 내용", description: "무엇이든지 상관없습니다. 원하는 웹페이지를 추가하세요", items: [
-                                { id: 33, unique: false, rename: true, name: "(맞춤형)기타", description: "(맞춤형)기타 소개내용", prices: { onetime: 400000, monthly: 25000 } }]
-                        }]
-                },
-                {
-                    name: "기능 추가", description: "미리 제작된 기능들을 활용한 페이지를 추가하여보세요",
-                    addedCount: 0,
-                    addedPrices: { onetime: 0, monthly: 0 },
-                    products: [
-                        {
-                            name: "게시판", description: "일반게시물, 사진, 동영상 등 다양한 양식의 게시판을 추가해보세요",
-                            items: [
-                                { id: 41, unique: true, rename: true, name: "일반게시판", description: "일반게시판 소개내용", prices: { onetime: 40000, monthly: 3000 } },
-                                { id: 42, unique: true, rename: true, name: "사진게시판", description: "사진게시판 소개내용", prices: { onetime: 40000, monthly: 4000 } },
-                                { id: 43, unique: true, rename: true, name: "동영상게시판", description: "동영상게시판 소개내용", prices: { onetime: 40000, monthly: 4000 } }]
-                        },
-                        {
-                            name: "인물소개", description: "역대 조합장 소개 등의 페이지에 활용해보세요", items: [
-                                { id: 51, unique: true, name: "인물소개", description: "인물소개 소개내용", prices: { onetime: 60000, monthly: 5000 } }]
-                        }]
-                },
-                ]
-        }
+    const buildHtml = (status, name, func) => `
+        <div class="node-wrapper">
+            <span class="status-badge ${status === '신규' ? 'status-new' : 'status-transfer'}">${status}</span>
+            <span class="menu-name">${name}</span>
+            <span class="menu-func-type">${func}</span>
+        </div>`;
 
-        const defaultMenus = {
-            submenus: [
-                {
-                    name: "농협소개", items: [
-                        { id: 0, name: "인사말" },
-                        { id: 0, name: "연혁" },
-                        { id: 0, name: "조직도" },
-                        { id: 0, name: "사무소안내" },
-                    ]
-                },
-                {
-                    name: "공시", items: [
-                        { id: 0, name: "운영의공개" },
-                        { id: 0, name: "경영공시" },
-                        { id: 0, name: "정관" },
-                    ]
-                },
-                {
-                    name: "금융상품", items: [
-                        { id: 0, name: "예금상품" },
-                        { id: 0, name: "대출상품" },
-                        { id: 0, name: "보험상품" },
-                        { id: 0, name: "카드상품" },
-                        { id: 0, name: "펀드상품" },
-                    ]
-                },
-                {
-                    name: "열린마당", items: [
-                        { id: 0, name: "공지사항" },
-                        { id: 0, name: "농업뉴스" },
-                        { id: 0, name: "농협갤러리" },
-                        { id: 0, name: "농협동영상" },
-                    ]
-                },
-            ]
-        }
+    const rawData = [
+        { id: "root", parent: "#", status: "이관", name: "종합포털 메인", funcType: "메인화면", type: "folder" },
+        { id: "intro", parent: "root", status: "이관", name: "조합소개", funcType: "폴더", type: "folder" },
+        { id: "intro_1", parent: "intro", status: "이관", name: "인사말", funcType: "단일페이지", type: "menu" },
+        { id: "intro_2", parent: "intro", status: "이관", name: "연혁", funcType: "단일페이지", type: "menu" },
+        { id: "intro_3", parent: "intro", status: "신규", name: "조직도", funcType: "단일페이지", type: "menu" },
+        { id: "intro_4", parent: "intro", status: "신규", name: "비전 및 핵심가치", funcType: "단일페이지", type: "menu" },
+        { id: "intro_5", parent: "intro", status: "이관", name: "오시는길", funcType: "API연동", type: "menu" },
+        { id: "intro_6", parent: "intro", status: "신규", name: "ESG경영안내", funcType: "외부링크", type: "link" },
+        { id: "fin", parent: "root", status: "이관", name: "금융/경제", funcType: "폴더", type: "folder" },
+        { id: "fin_dep", parent: "fin", status: "이관", name: "예금상품", funcType: "폴더", type: "folder" },
+        { id: "fin_dep1", parent: "fin_dep", status: "이관", name: "입출금자유예금", funcType: "프로그램", type: "menu" },
+        { id: "fin_dep2", parent: "fin_dep", status: "신규", name: "스마트특판예금", funcType: "프로그램", type: "menu" },
+        { id: "fin_dep3", parent: "fin_dep", status: "이관", name: "정기예금", funcType: "프로그램", type: "menu" },
+        { id: "fin_loan", parent: "fin", status: "이관", name: "대출상품", funcType: "폴더", type: "folder" },
+        { id: "fin_loan1", parent: "fin_loan", status: "이관", name: "신용대출", funcType: "프로그램", type: "menu" },
+        { id: "fin_loan2", parent: "fin_loan", status: "신규", name: "담보대출", funcType: "프로그램", type: "menu" },
+        { id: "fin_card", parent: "fin", status: "이관", name: "카드안내", funcType: "외부링크", type: "link" },
+        { id: "agri", parent: "root", status: "신규", name: "농축산물 유통", funcType: "폴더", type: "folder" },
+        { id: "agri_1", parent: "agri", status: "신규", name: "하나로마트 연동", funcType: "API연동", type: "menu" },
+        { id: "agri_2", parent: "agri", status: "신규", name: "로컬푸드 직매장", funcType: "게시판(갤러리)", type: "menu" },
+        { id: "agri_3", parent: "agri", status: "신규", name: "스마트팜 동향", funcType: "게시판(글)", type: "menu" },
+        { id: "agri_4", parent: "agri", status: "이관", name: "주요농산물 시세", funcType: "프로그램", type: "menu" },
+        { id: "agri_5", parent: "agri", status: "신규", name: "농업관측정보", funcType: "외부링크", type: "link" },
+        { id: "news", parent: "root", status: "이관", name: "소식/참여", funcType: "폴더", type: "folder" },
+        { id: "news_1", parent: "news", status: "이관", name: "공지사항", funcType: "게시판(글)", type: "menu" },
+        { id: "news_2", parent: "news", status: "신규", name: "이벤트", funcType: "게시판(이미지)", type: "menu" },
+        { id: "news_3", parent: "news", status: "이관", name: "보도자료", funcType: "게시판(글)", type: "menu" },
+        { id: "news_4", parent: "news", status: "신규", name: "홍보영상", funcType: "게시판(동영상)", type: "menu" },
+        { id: "cs", parent: "root", status: "이관", name: "고객센터", funcType: "폴더", type: "folder" },
+        { id: "cs_1", parent: "cs", status: "이관", name: "FAQ", funcType: "게시판(아코디언)", type: "menu" },
+        { id: "cs_2", parent: "cs", status: "신규", name: "1:1 문의", funcType: "프로그램", type: "menu" },
+        { id: "cs_3", parent: "cs", status: "이관", name: "영업점 안내", funcType: "API연동", type: "menu" },
+        { id: "cs_4", parent: "cs", status: "신규", name: "원격지원", funcType: "외부링크", type: "link" },
+        { id: "mypage", parent: "root", status: "이관", name: "마이페이지", funcType: "폴더", type: "folder" },
+        { id: "my_1", parent: "mypage", status: "이관", name: "정보수정", funcType: "프로그램", type: "menu" },
+        { id: "my_2", parent: "mypage", status: "이관", name: "이용내역", funcType: "프로그램", type: "menu" },
+        { id: "my_3", parent: "mypage", status: "신규", name: "인증서 관리", funcType: "프로그램", type: "menu" }
+    ];
 
-        // Global variables
-        let productsData = productGroups;
-        let menuStructure = defaultMenus;
-        let cartItems = [];
-        let currentGroupIndex = -1;
+    const treeData = rawData.map(item => ({
+        id: item.id, parent: item.parent, text: buildHtml(item.status, item.name, item.funcType),
+        type: item.type, state: { opened: true }, data: { status: item.status, name: item.name, funcType: item.funcType }
+    }));
 
-        // Initialize the application
-        function initializeApp() {
-            renderProductCards();
-            renderMenuFolders();
-            renderCartItems();
-        }
-
-        // Render product cards in left pane
-        function renderProductCards() {
-            const container = document.getElementById('productCards');
-            container.innerHTML = '';
-
-            productsData.groups.forEach((group, index) => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.innerHTML = `
-                    <h3>${group.name}</h3>
-                    <p>${group.description}</p>
-                    <div class="card-footer">
-                        <button class="add-btn" onclick="showProductItems(${index})">Add</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // Show product items in detail pane (left pane stays visible)
-        function showProductItems(groupIndex) {
-            currentGroupIndex = groupIndex;
-            const group = productsData.groups[groupIndex];
-
-            // Hide middle and right panes, show items pane
-            document.getElementById('middlePane').classList.add('hidden');
-            document.getElementById('rightPane').classList.add('hidden');
-            document.getElementById('itemsPane').classList.remove('hidden');
-
-            // Render items
-            const itemsList = document.getElementById('itemsList');
-            itemsList.innerHTML = `<h2>${group.name}</h2>`;
-
-            const container = document.createElement('div');
-
-            group.products.forEach(product => {
-                const div = document.createElement('div');
-                div.classList.add('add_table_container');
-
-                const table = document.createElement('table');
-                table.classList.add('add_table_table');
-
-                // Create thead with product name and description
-                const thead = document.createElement('thead');
-                const headRow = document.createElement('tr');
-
-                const thName = document.createElement('th');
-                thName.textContent = product.name;
-                thName.classList.add('add_table_name');
-
-                const thDesc = document.createElement('th');
-                thDesc.textContent = product.description;
-                thDesc.classList.add('add_table_desc');
-                thDesc.setAttribute('colspan', '4');
-
-                headRow.appendChild(thName);
-                headRow.appendChild(thDesc);
-                thead.appendChild(headRow);
-                table.appendChild(thead);
-
-                const tbody = document.createElement('tbody');
-                product.items.forEach(item => {
-                    const row = document.createElement('tr');
-
-                    const tdName = document.createElement('td');
-                    tdName.classList.add('add_table_name');
-                    tdName.textContent = item.name;
-
-                    const tdDesc = document.createElement('td');
-                    tdDesc.classList.add('add_table_desc');
-                    tdDesc.textContent = item.description;
-
-                    const tdLabel = document.createElement('td');
-                    const spanLabel = document.createElement('span');
-                    spanLabel.classList.add('add_table_label');
-                    spanLabel.textContent = "월 비용";
-                    tdLabel.appendChild(spanLabel);
-
-                    const tdPrice = document.createElement('td');
-                    tdPrice.classList.add('add_table_price');
-                    tdPrice.textContent = item.prices.monthly.toLocaleString() + "원";
-
-                    const tdButton = document.createElement('td');
-                    tdButton.classList.add('add_table_button_cell');
-                    const btnAdd = document.createElement('button');
-                    btnAdd.classList.add('add_table_btn_add');
-                    btnAdd.textContent = "추가하기";
-                    btnAdd.onclick = () => addToCart(item.id);
-                    tdButton.appendChild(btnAdd);
-
-                    row.appendChild(tdName);
-                    row.appendChild(tdDesc);
-                    row.appendChild(tdLabel);
-                    row.appendChild(tdPrice);
-                    row.appendChild(tdButton);
-                    tbody.appendChild(row);
-                });
-
-                table.appendChild(tbody);
-                div.appendChild(table);
-                container.appendChild(div);
-                itemsList.appendChild(container);
-            });
-
-        }
-
-        // Add item to cart
-        function addToCart(itemId) {
-            const group = productsData.groups[currentGroupIndex];
-            const product = group.products.find(product => product.items.find(item => item.id === itemId));
-            const item = product.items.find(item => item.id === itemId);
-
-            if (item) {
-                cartItems.push(item);
-                showMainPanes();
-                renderCartItems();
-            }
-        }
-
-        // Show main panes (hide items pane, show middle and right)
-        function showMainPanes() {
-            document.getElementById('middlePane').classList.remove('hidden');
-            document.getElementById('rightPane').classList.remove('hidden');
-            document.getElementById('itemsPane').classList.add('hidden');
-        }
-
-        // Render cart items in middle pane
-        function renderCartItems() {
-            const container = document.getElementById('cartItems');
-            container.innerHTML = '';
-
-            cartItems.forEach((item, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'middle-item';
-                itemDiv.draggable = true;
-                itemDiv.dataset.itemId = index;
-                itemDiv.innerHTML = `
-                    <h4>${item.name}</h4>
-                    <button class="back-btn" onclick="removeCartItem(${index})">삭제</button>
-                `;
-
-                // Add drag event listeners
-                itemDiv.addEventListener('dragstart', handleDragStart);
-                itemDiv.addEventListener('dragend', handleDragEnd);
-
-                container.appendChild(itemDiv);
-            });
-        }
-
-        function removeCartItem(index) {
-            if (index >= 0 && index < cartItems.length) {
-                cartItems.splice(index, 1);
-                renderCartItems();
-            }
-        }
-
-
-        // Render menu folders in right pane
-        function renderMenuFolders() {
-            const container = document.getElementById('foldersGrid');
-            container.innerHTML = '';
-
-            menuStructure.submenus.forEach((submenu, index) => {
-                const folder = document.createElement('div');
-                folder.className = 'folder';
-                folder.dataset.submenuIndex = index;
-
-                let itemsHtml = '';
-                if (submenu.items && submenu.items.length > 0) {
-                    itemsHtml = submenu.items.map((item, i) => `
-                        <div class="folder-item">${item.name} <button class="del-btn" onclick="removeFolderItem(${index}, ${i})">제거</button></div>
-                        
-                    `).join('');
+    $('#sitemap_tree').jstree({
+        "core": {
+            "animation": 150, 
+            "data": treeData,
+            "check_callback": function (operation, node, node_parent, node_position, more) {
+                if (operation === "move_node") {
+                    if (node_parent && node_parent.id !== "#" && node_parent.type !== "folder") return false; 
+                    if (more && more.dnd && more.pos === "i" && more.ref && more.ref.id === node.parent) return false;
                 }
-
-                folder.innerHTML = `
-                    <h3>${submenu.name}</h3>
-                    ${itemsHtml}
-                `;
-
-                // Add drop event listeners
-                folder.addEventListener('dragover', handleDragOver);
-                folder.addEventListener('drop', handleDrop);
-                folder.addEventListener('dragenter', handleDragEnter);
-                folder.addEventListener('dragleave', handleDragLeave);
-
-                container.appendChild(folder);
-            });
-        }
-
-        function removeFolderItem(submenuIndex, index) {
-            let item = menuStructure.submenus[submenuIndex].items.splice(index, 1)[0];
-            console.log(item);
-            cartItems.push(item);
-            renderCartItems();
-            renderMenuFolders();
-        }
-
-
-        // Drag and drop event handlers
-        function handleDragStart(e) {
-            console.log(e.target.dataset.itemId);
-            e.dataTransfer.setData('text/plain', e.target.dataset.itemId);
-            e.target.classList.add('dragging');
-        }
-
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDragEnter(e) {
-            e.preventDefault();
-            e.target.closest('.folder').classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            if (!e.target.closest('.folder').contains(e.relatedTarget)) {
-                e.target.closest('.folder').classList.remove('drag-over');
+                return true;
             }
-        }
+        },
+        "types": {
+            "#": { "valid_children": ["folder"] },
+            "folder": { "icon": "fa-solid fa-folder text-warning", "valid_children": ["folder", "menu", "link"] },
+            "menu": { "icon": "fa-solid fa-file-lines text-primary", "valid_children": [] },
+            "link": { "icon": "fa-solid fa-arrow-up-right-from-square text-info", "valid_children": [] }
+        },
+        "contextmenu": {
+            "items": function ($node) {
+                var tree = $("#sitemap_tree").jstree(true);
+                var isFolder = $node.type === "folder" || $node.id === "root";
+                var items = { "Rename": { "label": "메뉴 이름 수정", "icon": "fa-solid fa-pen", "action": () => triggerInlineEdit(tree, $node) } };
 
-        function handleDrop(e) {
-            e.preventDefault();
-            const folder = e.target.closest('.folder');
-            folder.classList.remove('drag-over');
-
-            const itemIndex = e.dataTransfer.getData('text/plain');
-            const submenuIndex = parseInt(folder.dataset.submenuIndex);
-
-            const item = cartItems[itemIndex]
-            if (item) {
-                if (!menuStructure.submenus[submenuIndex].items) {
-                    menuStructure.submenus[submenuIndex].items = [];
+                if (isFolder) {
+                    items["AddMenu"] = { "label": "아래에 신규 메뉴 추가", "icon": "fa-solid fa-file-circle-plus", "action": () => { treeRef = tree; targetParent = $node; $('#menuTypeModal').fadeIn(150).css('display', 'flex'); } };
+                    items["AddFolder"] = { "label": "아래에 신규 폴더 추가", "icon": "fa-solid fa-folder-plus", "action": () => addNewNode(tree, $node, "folder", "폴더") };
                 }
-                menuStructure.submenus[submenuIndex].items.push(item);
-                removeCartItem(itemIndex);
-                renderMenuFolders();
-            }
-        }
-
-        // Add new submenu
-        function addNewSubmenu() {
-            const name = prompt('Enter submenu name:');
-            if (name && name.trim()) {
-                menuStructure.submenus.push({
-                    name: name.trim(),
-                    items: []
-                });
-                renderMenuFolders();
-            }
-        }
-
-        // Load custom data function for testing
-        function loadCustomData(productsJson, menuJson) {
-            try {
-                if (productsJson) {
-                    productsData = typeof productsJson === 'string' ? JSON.parse(productsJson) : productsJson;
+                if ($node.id !== "root") {
+                    items["Delete"] = { "label": "메뉴 삭제", "icon": "fa-solid fa-trash text-danger", "action": () => { if(confirm(`[${$node.data.name}] 메뉴를 삭제하시겠습니까?`)) tree.delete_node($node); } };
                 }
-
-                if (menuJson) {
-                    menuStructure = typeof menuJson === 'string' ? JSON.parse(menuJson) : menuJson;
-                }
-
-                // Reset cart and re-initialize
-                cartItems = [];
-                initializeApp();
-            } catch (e) {
-                console.error('Invalid JSON format:', e.message);
+                return items;
             }
+        },
+        "plugins": ["dnd", "types", "contextmenu"]
+    });
+
+    // ============================================================
+    // Depth Limit Checker (Floating Toast Version)
+    // ============================================================
+    function checkDepthLimits() {
+        var tree = $('#sitemap_tree').jstree(true);
+        if(!tree) return;
+        
+        var allNodes = tree.get_json('#', { flat: true });
+        var hasError = false;
+
+        $('.depth-error-node').removeClass('depth-error-node');
+        
+        allNodes.forEach(function(n) {
+            var node = tree.get_node(n.id);
+            
+            if (node && node.parents && node.parents.length >= 5) {
+                hasError = true;
+                var domNode = tree.get_node(node, true);
+                if(domNode && domNode.length) {
+                    domNode.addClass('depth-error-node');
+                }
+            }
+        });
+        
+        // Show/Hide toast using fadeIn/fadeOut instead of slideDown for floating items
+        if (hasError) {
+            if (!$('#depth_error_banner').is(':visible')) {
+                $('#depth_error_banner').fadeIn(250).css('display', 'flex');
+            }
+        } else {
+            $('#depth_error_banner').fadeOut(250);
         }
+    }
 
-        // Initialize the app when page loads
-        document.addEventListener('DOMContentLoaded', initializeApp);
+    $('#sitemap_tree').on('ready.jstree move_node.jstree create_node.jstree delete_node.jstree open_node.jstree', function() {
+        checkDepthLimits();
+    });
 
-        // Expose loadCustomData function globally for external use
-        window.ProductMenuManager = {
-            loadCustomData: loadCustomData,
-            getCartItems: () => cartItems,
-            getMenuStructure: () => menuStructure
+    // ============================================================
+    // DND Hooks (Overlay UI)
+    // ============================================================
+    let currentOverlayNode = null;
+    function clearOverlay() {
+        if(currentOverlayNode) { currentOverlayNode.find('.drop-inside-overlay').remove(); currentOverlayNode = null; }
+        $('body').removeClass('hide-marker hide-drag-text');
+    }
+
+    $(document).on('dnd_move.vakata', function (e, data) {
+        var instance = $('#sitemap_tree').jstree(true);
+        var draggedNodeId = data.data.nodes[0];
+        var draggedNode = instance.get_node(draggedNodeId);
+
+        if ($(data.element).find('.jstree-er').length > 0) { clearOverlay(); return; }
+
+        var $targetAnchor = $(data.event.target).closest('.jstree-anchor');
+        if ($targetAnchor.length > 0) {
+            var nodeId = $targetAnchor.parent().attr('id');
+            var hoverNode = instance.get_node(nodeId);
+            
+            var nodeOffset = $targetAnchor.offset();
+            var nodeHeight = $targetAnchor.outerHeight();
+            var mouseY = data.event.pageY;
+            
+            var isInsideMiddleZone = (mouseY > nodeOffset.top + (nodeHeight / 3)) && (mouseY < nodeOffset.top + nodeHeight - (nodeHeight / 3));
+            var isCurrentParent = (hoverNode && hoverNode.id === draggedNode.parent);
+
+            if (isInsideMiddleZone && hoverNode && hoverNode.type === "folder" && !isCurrentParent) {
+                $('body').addClass('hide-marker hide-drag-text');
+                if(!currentOverlayNode || currentOverlayNode[0] !== $targetAnchor[0]) {
+                    clearOverlay(); 
+                    currentOverlayNode = $targetAnchor;
+                    $targetAnchor.append('<div class="drop-inside-overlay"></div>');
+                }
+            } else { clearOverlay(); }
+        } else { clearOverlay(); }
+    });
+    $(document).on('dnd_stop.vakata', function (e, data) { clearOverlay(); });
+
+    // Inline Edit
+    function triggerInlineEdit(tree, node) {
+        var $anchor = $('#' + node.id + '_anchor');
+        var $menuNameSpan = $anchor.find('.menu-name');
+        var currentName = node.data.name;
+        
+        var $input = $('<input type="text" class="edit-input">').val(currentName);
+        var $saveBtn = $('<button class="edit-save-btn"><i class="fa-solid fa-check"></i></button>');
+        
+        $menuNameSpan.empty().append($('<div class="edit-container"></div>').append($input, $saveBtn));
+        $input.focus().select().on('mousedown click', e => e.stopPropagation());
+        
+        let isSaved = false;
+        const save = () => {
+            if (isSaved) return; isSaved = true;
+            node.data.name = $input.val().trim() || currentName;
+            tree.rename_node(node, buildHtml(node.data.status, node.data.name, node.data.funcType));
+            checkDepthLimits(); 
         };
-    </script>
+        
+        $input.on('keydown', e => { e.stopPropagation(); if(e.key === 'Enter') save(); if(e.key === 'Escape'){ $input.val(currentName); save(); }});
+        $saveBtn.on('mousedown', e => { e.preventDefault(); save(); });
+        $input.on('blur', save);
+    }
+
+    // Add Node
+    function addNewNode(tree, parent, type, funcType) {
+        var data = { status: "신규", name: type === "folder" ? "새 폴더" : "새 메뉴", funcType };
+        tree.create_node(parent, { text: buildHtml(data.status, data.name, data.funcType), type, data }, "last", (new_node) => {
+            tree.open_node(parent);
+            setTimeout(() => {
+                var $wrapper = tree.get_node(new_node, true).find('.node-wrapper').addClass('blink-highlight');
+                setTimeout(() => $wrapper.removeClass('blink-highlight'), 2000);
+                triggerInlineEdit(tree, tree.get_node(new_node));
+                checkDepthLimits();
+            }, 100);
+        });
+    }
+
+    // Modals
+    $('.close-btn, .modal-overlay').on('click', function(e) { if(e.target === this || $(this).hasClass('close-btn')) $('#menuTypeModal').fadeOut(150); });
+    $('.type-card').on('click', function() {
+        if(!treeRef || !targetParent) return;
+        $('#menuTypeModal').fadeOut(150);
+        addNewNode(treeRef, targetParent, $(this).data('type'), $(this).data('func'));
+    });
+});
+</script>
 
 </body>
-
 </html>
