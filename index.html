@@ -15,8 +15,34 @@
         .sitemap-container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 900px; margin: auto; }
         h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         
-        .jstree-default .jstree-anchor { height: auto !important; line-height: 28px; padding: 2px 4px; position: relative; }
-        .node-wrapper { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; padding: 2px 4px; border-radius: 4px; transition: all 0.2s; border: 2px solid transparent; }
+        /* ============================================================
+           Node Layout & Icon Alignment
+           ============================================================ */
+        /* Make the node container a flexbox to perfectly center icon and text */
+        .jstree-default .jstree-anchor { 
+            display: inline-flex !important; 
+            align-items: center; 
+            vertical-align: middle !important;
+            height: auto !important; 
+            padding: 4px 6px; 
+            position: relative; 
+        }
+        /* Make the open/close chevron align with the center of the taller nodes */
+        .jstree-default .jstree-ocl {
+            vertical-align: middle !important;
+        }
+        /* Enlarge and center the FontAwesome icon within its own block */
+        .jstree-default .jstree-themeicon {
+            font-size: 18px !important; 
+            width: 26px !important; 
+            height: 26px !important;
+            display: flex !important; 
+            align-items: center; 
+            justify-content: center; 
+            margin-right: 6px !important;
+        }
+
+        .node-wrapper { display: inline-flex; align-items: center; gap: 8px; padding: 2px 4px; border-radius: 4px; transition: all 0.2s; border: 2px solid transparent; }
         .status-badge { border-radius: 20px; padding: 0 8px; font-size: 11px; font-weight: 600; line-height: 20px; transition: all 0.2s; }
         .status-transfer { color: #d97706; background: #fef3c7; border: 1px solid #f59e0b; }
         .status-new { color: #0284c7; background: #e0f2fe; border: 1px solid #38bdf8; }
@@ -29,7 +55,7 @@
            Floating Toast Banner & Continuous Blinking CSS
            ============================================================ */
         .depth-error-banner {
-            display: none; /* Controlled by JS */
+            display: none; 
             position: fixed;
             top: 30px;
             left: 50%;
@@ -47,7 +73,7 @@
             box-shadow: 0 10px 25px rgba(239, 68, 68, 0.25);
             width: max-content;
             max-width: 90vw;
-            pointer-events: none; /* Prevents banner from blocking clicks */
+            pointer-events: none; 
         }
         
         @keyframes continuous-red-blink {
@@ -56,19 +82,14 @@
             100% { background-color: #fee2e2; border-color: #ef4444; box-shadow: 0 0 0px rgba(239, 68, 68, 0.6); }
         }
 
-        /* 
-           Bulletproof Structural CSS for Depth 4+ 
-        */
         .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .node-wrapper,
         .depth-error-node > .jstree-anchor .node-wrapper {
             animation: continuous-red-blink 1.2s infinite !important;
         }
-
         .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .menu-name,
         .depth-error-node > .jstree-anchor .menu-name {
             color: #7f1d1d !important;
         }
-
         .jstree-container-ul > li > ul > li > ul > li > ul > li > ul li .status-badge,
         .depth-error-node > .jstree-anchor .status-badge {
             background-color: #ef4444 !important;
@@ -89,7 +110,8 @@
         .drop-inside-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(255, 255, 255, 0.95); border: 2px dashed #10b981; border-radius: 4px;
-            display: flex; align-items: center; padding-left: 28px; z-index: 10; pointer-events: none;
+            display: flex; align-items: center; padding-left: 36px; /* Increased to accommodate larger icon */
+            z-index: 10; pointer-events: none;
         }
         .drop-inside-overlay::after { content: '\f061  하위 메뉴로 이동'; font-family: 'Font Awesome 6 Free', 'Malgun Gothic', sans-serif; font-weight: 900; color: #10b981; font-size: 13px; }
 
@@ -125,7 +147,7 @@
 </div>
 
 <div class="sitemap-container">
-    <h2>차세대 종합포털 사이트맵</h2>
+    <h2>차세대 종합포털 사이트맵 (35 Nodes)</h2>
     <div id="sitemap_tree"></div>
 </div>
 
@@ -240,7 +262,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // Depth Limit Checker (Floating Toast Version)
+    // Depth Limit Checker
     // ============================================================
     function checkDepthLimits() {
         var tree = $('#sitemap_tree').jstree(true);
@@ -263,7 +285,6 @@ $(document).ready(function() {
             }
         });
         
-        // Show/Hide toast using fadeIn/fadeOut instead of slideDown for floating items
         if (hasError) {
             if (!$('#depth_error_banner').is(':visible')) {
                 $('#depth_error_banner').fadeIn(250).css('display', 'flex');
